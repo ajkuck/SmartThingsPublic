@@ -27,6 +27,19 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/light_outlet@2x.png"
 )
 
+/** Constants for Hue Colors */
+Map getHueColors() {
+    return [Red: 0, Green: 39, Blue: 70, Yellow: 25, Orange: 10, Purple: 75, Pink: 83, White:0]
+}
+
+Map getSaturationColors() {
+    return [Red: 255, Green: 255, Blue: 255, Yellow: 255, Orange: 255, Purple: 255, Pink: 255, White:0]
+}
+
+Map getValueColors() {
+    return [Red: 255, Green: 255, Blue: 255, Yellow: 255, Orange: 255, Purple: 255, Pink: 255, White:255]
+}
+
 preferences {
 	section("Select lights to control...") {
 		input name: "lights", type: "capability.colorControl", multiple: true
@@ -34,8 +47,8 @@ preferences {
 	section("Time to get ready for bed...") {
 		input name: "bedPrepTime", title: "Bed Prep Time?", type: "time"
 		input name: "bedPrepColor", title: "Bed Prep Color?", type: "enum", 
-        			required: true, multiple: false, default: 4, options: [
-					"Red","Green","Blue","Yellow","Orange","Purple","Pink","White"]
+        			required: true, multiple: false, default: 4, 
+                    options: getHueColors().keySet() as String[]
 	}
     section("Time to go to bed...") {
 		input name: "bedTime", title: "Bed Time?", type: "time"
@@ -43,8 +56,7 @@ preferences {
         	  required: true, 
               multiple: false,
               default: "Blue",
-              options: [
-					"Red","Green","Blue","Yellow","Orange","Purple","Pink","White"]
+              options: getHueColors().keySet() as String[]
 	}
 
 	section("Okay to wake up...") {
@@ -53,8 +65,7 @@ preferences {
         	  required: true, 
               multiple: false,
               default: "Green",
-              options: [
-					"Red","Green","Blue","Yellow","Orange","Purple","Pink","White"]
+              options: getHueColors().keySet() as String[]
 	}
     section("Get out of bed...") {
 		input name: "getUpTime", title: "Get Up Time?", type: "time"
@@ -62,8 +73,7 @@ preferences {
         	  required: true, 
               multiple: false,
               default: "White",
-              options: [
-					"Red","Green","Blue","Yellow","Orange","Purple","Pink","White"]
+              options: getHueColors().keySet() as String[]
 	}
 
     section("Ignore when mode is...") {
@@ -100,6 +110,7 @@ def bedTimerCallback() {
 
 def wakeTimerCallback() {
 	log.debug "Setting Wake-Up-Timer"
+    log.warn "Setting to target color: '${bedPrepColor}'"
     setIfActive(wakeColor)
 }
 
@@ -117,52 +128,10 @@ def setIfActive(targetColor)
     else
     {
     	log.warn "Acting because mode '${currentMode}'"
-        setColor(targetColor)
+        log.warn "Setting to target color: '${targetColor}'"
+        lights.setLevel(getValueColors()[targetColor])
+        lights.setSaturation(getSaturationColors()[targetColor])
+        lights.setHue(getHueColors()[targetColor])
+        lights.on()
     }
-}
-
-def setColor(targetColor)
-{   
-	log.warn "Setting to target color: '${targetColor}'"
-    def hueColor = 83
-    
-    def colorlist = ["Red","Green","Blue","Yellow","Orange","Purple","Pink","White"]
-    
-    def targetColorValue = colorlist.getAt(targetColor)
-    
-    log.warn "Setting to target color: '${targetColorValue}'"
-    switch (targetColorValue)
-    {
-	    case "White":
-                hueColor = 0
-                break;
-        case "Blue":
-                hueColor = 70
-                break;
-        case "Green":
-                hueColor = 39
-                break;
-        case "Yellow":
-                hueColor = 25
-                break;
-        case "Orange":
-                hueColor = 10
-                break;
-        case "Purple":
-                hueColor = 75
-                break;
-        case "Pink":
-                hueColor = 83
-                break;
-        case "Red":
-                hueColor = 100
-                break;
-        
-                
-    }
-
-    lights.setLevel(99)
-	lights.setSaturation(69)
-	lights.setHue(hueColor)
-    lights.on()
 }
